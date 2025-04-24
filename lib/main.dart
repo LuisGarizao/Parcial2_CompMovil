@@ -13,8 +13,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Inventario Fácil',
       theme: ThemeData(
-        primarySwatch: Colors.lightGreen,
         useMaterial3: true,
+        colorSchemeSeed: Colors.green,
+        brightness: Brightness.light,
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(),
+        ),
+        cardTheme: CardTheme(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 4,
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        ),
       ),
       home: const HomePage(),
     );
@@ -92,15 +103,18 @@ class _HomePageState extends State<HomePage> {
                 controller: refController,
                 decoration: const InputDecoration(labelText: 'Referencia'),
               ),
+              const SizedBox(height: 10),
               TextField(
                 controller: nombreController,
                 decoration: const InputDecoration(labelText: 'Nombre'),
               ),
+              const SizedBox(height: 10),
               TextField(
                 controller: precioController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Precio'),
               ),
+              const SizedBox(height: 10),
               TextField(
                 controller: descripcionController,
                 decoration: const InputDecoration(labelText: 'Descripción'),
@@ -125,11 +139,11 @@ class _HomePageState extends State<HomePage> {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Error'),
-                      content: const Text('Referencia ya utilizada. Usa otra.'),
+                      title: const Text('Referencia duplicada'),
+                      content: const Text('La referencia ya ha sido utilizada. Usa otra diferente.'),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.of(context).pop(),
                           child: const Text('OK'),
                         ),
                       ],
@@ -156,13 +170,13 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inventario Fácil'),
+        title: const Text('Gestión De Inventario'),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Chip(
@@ -183,14 +197,18 @@ class _HomePageState extends State<HomePage> {
                 final data = entry.value;
                 return Card(
                   child: ListTile(
-                    title: Text(data['nombre']),
+                    title: Text(
+                      data['nombre'],
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: Text(data['descripcion']),
                     trailing: IconButton(
-                      icon: const Icon(Icons.delete),
+                      icon: const Icon(Icons.delete, color: Colors.redAccent),
                       onPressed: () => eliminarProducto(ref),
                     ),
                     leading: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text('Ref: $ref'),
                         Text('\$${data['precio']}'),
@@ -203,9 +221,10 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: mostrarFormularioAgregarProducto,
-        child: const Icon(Icons.add),
+        label: const Text('Agregar'),
+        icon: const Icon(Icons.add_box_rounded),
       ),
     );
   }
