@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
+// import 'package:intl/intl.dart';
 
 void main() {
-  runApp(const InventarioApp());
+  runApp(const MyApp());
 }
 
-class InventarioApp extends StatelessWidget {
-  const InventarioApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,63 +15,31 @@ class InventarioApp extends StatelessWidget {
       title: 'Inventario Fácil',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        useMaterial3: true,
       ),
-      home: const HomeScreen(),
-      debugShowCheckedModeBanner: false,
+      home: const HomePage(),
     );
   }
 }
 
-class Producto {
-  final String referencia;
-  final String nombre;
-  final double precio;
-  final String descripcion;
-
-  Producto({
-    required this.referencia,
-    required this.nombre,
-    required this.precio,
-    required this.descripcion,
-  });
-}
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final Map<String, Producto> productos = {};
+class _HomePageState extends State<HomePage> {
+  final Map<String, Map<String, dynamic>> productos = {};
 
-  final _refController = TextEditingController();
-  final _nombreController = TextEditingController();
-  final _precioController = TextEditingController();
-  final _descripcionController = TextEditingController();
-
-  void agregarProducto() {
-    final ref = _refController.text;
-    final nombre = _nombreController.text;
-    final precio = double.tryParse(_precioController.text) ?? 0.0;
-    final descripcion = _descripcionController.text;
-
-    if (ref.isNotEmpty && nombre.isNotEmpty && descripcion.isNotEmpty) {
-      setState(() {
-        productos[ref] = Producto(
-          referencia: ref,
-          nombre: nombre,
-          precio: precio,
-          descripcion: descripcion,
-        );
-        _refController.clear();
-        _nombreController.clear();
-        _precioController.clear();
-        _descripcionController.clear();
-      });
-    }
+  void agregarProducto(String ref, String nombre, double precio, String descripcion) {
+    setState(() {
+      productos[ref] = {
+        'nombre': nombre,
+        'precio': precio,
+        'descripcion': descripcion,
+      };
+    });
   }
 
   void eliminarProducto(String ref) {
@@ -78,62 +48,122 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void mostrarFormularioAgregarProducto() {
+    final refController = TextEditingController();
+    final nombreController = TextEditingController();
+    final precioController = TextEditingController();
+    final descripcionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Agregar producto'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: refController,
+                decoration: const InputDecoration(labelText: 'Referencia'),
+              ),
+              TextField(
+                controller: nombreController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+              ),
+              TextField(
+                controller: precioController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Precio'),
+              ),
+              TextField(
+                controller: descripcionController,
+                decoration: const InputDecoration(labelText: 'Descripción'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final ref = refController.text;
+              final nombre = nombreController.text;
+              final precio = double.tryParse(precioController.text) ?? 0.0;
+              final descripcion = descripcionController.text;
+
+              if (ref.isNotEmpty && nombre.isNotEmpty) {
+                agregarProducto(ref, nombre, precio, descripcion);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalProductos = productos.length;
-    final totalPrecio = productos.values.fold(0.0, (sum, p) => sum + p.precio);
+    final totalAcumulado = productos.values.fold<double>(
+        0.0, (suma, item) => suma + (item['precio'] as double));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Inventario Fácil')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: agregarProducto,
-        child: const Icon(Icons.add),
+      appBar: AppBar(
+        title: const Text('Inventario Fácil'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _refController,
-              decoration: const InputDecoration(labelText: 'Referencia'),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Chip(
+                  label: Text('$totalProductos producto(s)'),
+                  backgroundColor: Colors.green.shade200,
+                ),
+                Chip(
+                  label: Text('\$Total: ${totalAcumulado.toStringAsFixed(2)}'),
+                  backgroundColor: Colors.blue.shade200,
+                ),
+              ],
             ),
-            TextField(
-              controller: _nombreController,
-              decoration: const InputDecoration(labelText: 'Nombre'),
-            ),
-            TextField(
-              controller: _precioController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Precio'),
-            ),
-            TextField(
-              controller: _descripcionController,
-              decoration: const InputDecoration(labelText: 'Descripción'),
-            ),
-            const SizedBox(height: 20),
-            Text('Total productos: $totalProductos'),
-            Text('Valor acumulado: \$${totalPrecio.toStringAsFixed(2)}'),
-            const Divider(height: 32),
-            Expanded(
-              child: ListView(
-                children: productos.values.map((producto) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(producto.nombre),
-                      subtitle: Text(producto.descripcion),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => eliminarProducto(producto.referencia),
-                      ),
-                      leading: Text('\$${producto.precio.toStringAsFixed(2)}'),
+          ),
+          Expanded(
+            child: ListView(
+              children: productos.entries.map((entry) {
+                final ref = entry.key;
+                final data = entry.value;
+                return Card(
+                  child: ListTile(
+                    title: Text(data['nombre']),
+                    subtitle: Text(data['descripcion']),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => eliminarProducto(ref),
                     ),
-                  );
-                }).toList(),
-              ),
+                    leading: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Ref: $ref'),
+                        Text('\$${data['precio']}'),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: mostrarFormularioAgregarProducto,
+        child: const Icon(Icons.add),
       ),
     );
   }
