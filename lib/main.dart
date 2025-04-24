@@ -122,8 +122,18 @@ class _HomePageState extends State<HomePage> {
 
               if (ref.isNotEmpty && nombre.isNotEmpty) {
                 if (referenciasUsadas.contains(ref)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Referencia ya utilizada. Usa otra.')),
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Error'),
+                      content: const Text('Referencia ya utilizada. Usa otra.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
                   );
                 } else {
                   await agregarProducto(ref, nombre, precio, descripcion);
@@ -152,7 +162,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Row(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Chip(
