@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
 // import 'package:intl/intl.dart';
 
 void main() {
@@ -14,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Inventario Fácil',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.lightGreen,
         useMaterial3: true,
       ),
       home: const HomePage(),
@@ -32,6 +31,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final Map<String, Map<String, dynamic>> productos = {};
   final Set<String> referenciasUsadas = {};
+
+  @override
+  void initState() {
+    super.initState();
+    agregarProducto('A1', 'Guitarra Acústica', 1500, 'Marca Fender');
+    agregarProducto('A2', 'Guitarra eléctrica', 3000, 'Marca Gibson');
+    agregarProducto('A3', 'Bateria', 2700, 'Marca Yamaha');
+  }
 
   void agregarProducto(String ref, String nombre, double precio, String descripcion) {
     setState(() {
