@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
+import 'db_helper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,23 +35,39 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    agregarProducto('A1', 'Guitarra Acústica', 1500, 'Marca Fender');
-    agregarProducto('A2', 'Guitarra eléctrica', 3000, 'Marca Gibson');
-    agregarProducto('A3', 'Bateria', 2700, 'Marca Yamaha');
+    _cargarProductos();
   }
 
-  void agregarProducto(String ref, String nombre, double precio, String descripcion) {
+  Future<void> _cargarProductos() async {
+    final datos = await DBHelper.obtenerProductos();
     setState(() {
-      productos[ref] = {
-        'nombre': nombre,
-        'precio': precio,
-        'descripcion': descripcion,
-      };
+      for (var prod in datos) {
+        productos[prod['ref']] = {
+          'nombre': prod['nombre'],
+          'precio': prod['precio'],
+          'descripcion': prod['descripcion'],
+        };
+        referenciasUsadas.add(prod['ref']);
+      }
+    });
+  }
+
+  Future<void> agregarProducto(String ref, String nombre, double precio, String descripcion) async {
+    final nuevoProducto = {
+      'ref': ref,
+      'nombre': nombre,
+      'precio': precio,
+      'descripcion': descripcion,
+    };
+    await DBHelper.insertarProducto(nuevoProducto);
+    setState(() {
+      productos[ref] = nuevoProducto;
       referenciasUsadas.add(ref);
     });
   }
 
-  void eliminarProducto(String ref) {
+  Future<void> eliminarProducto(String ref) async {
+    await DBHelper.eliminarProducto(ref);
     setState(() {
       productos.remove(ref);
       referenciasUsadas.remove(ref);
@@ -98,7 +114,7 @@ class _HomePageState extends State<HomePage> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final ref = refController.text;
               final nombre = nombreController.text;
               final precio = double.tryParse(precioController.text) ?? 0.0;
@@ -110,8 +126,8 @@ class _HomePageState extends State<HomePage> {
                     const SnackBar(content: Text('Referencia ya utilizada. Usa otra.')),
                   );
                 } else {
-                  agregarProducto(ref, nombre, precio, descripcion);
-                  Navigator.pop(context);
+                  await agregarProducto(ref, nombre, precio, descripcion);
+                  if (context.mounted) Navigator.pop(context);
                 }
               }
             },
