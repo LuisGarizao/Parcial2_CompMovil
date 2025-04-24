@@ -31,6 +31,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final Map<String, Map<String, dynamic>> productos = {};
+  final Set<String> referenciasUsadas = {};
 
   void agregarProducto(String ref, String nombre, double precio, String descripcion) {
     setState(() {
@@ -39,12 +40,14 @@ class _HomePageState extends State<HomePage> {
         'precio': precio,
         'descripcion': descripcion,
       };
+      referenciasUsadas.add(ref);
     });
   }
 
   void eliminarProducto(String ref) {
     setState(() {
       productos.remove(ref);
+      referenciasUsadas.remove(ref);
     });
   }
 
@@ -95,8 +98,14 @@ class _HomePageState extends State<HomePage> {
               final descripcion = descripcionController.text;
 
               if (ref.isNotEmpty && nombre.isNotEmpty) {
-                agregarProducto(ref, nombre, precio, descripcion);
-                Navigator.pop(context);
+                if (referenciasUsadas.contains(ref)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Referencia ya utilizada. Usa otra.')),
+                  );
+                } else {
+                  agregarProducto(ref, nombre, precio, descripcion);
+                  Navigator.pop(context);
+                }
               }
             },
             child: const Text('Confirmar'),
